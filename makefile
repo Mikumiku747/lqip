@@ -12,11 +12,11 @@ OBJFILES := $(SRCFILES:*.c=*.o)
 # Recipies
 all: lqip
 
-lqip: $OBJFILES
-	gcc $LDFLAGS $OBJFILES -o lqip
+lqip: $(OBJFILES)
+	gcc $(LDFLAGS) $(OBJFILES) -o lqip
 
 %.o: %.c
-	gcc $CFLAGS $< -o $@ -MMD
+	gcc $(CFLAGS) $< -o $@ -MMD
 
 
 # Include the header-generated dependencies

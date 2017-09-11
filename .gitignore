@@ -1,3 +1,6 @@
+# Ignore the final build executable
+lqip
+
 # Prerequisites
 *.d
 
