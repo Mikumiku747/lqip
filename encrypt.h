@@ -1,5 +1,5 @@
 /**
- * @file: encode.c
+ * @file: encrypt.c
  * @subject: 48430 Embedded C - Assignment 3
  * @developers:
  *   @name: Zouhir Chahoud @student_id: 11763745
@@ -19,14 +19,22 @@
  *
  */
 
+
 /**
- * @name imageEncoder
- * @brief accepts image URI and returns a base64 string
+ * @name encryptFile
+ * @brief encrypts file
  *
  * @developer:
  *
  */
-char *imageEncoder(void);
+void encryptFile(void);
 
+/**
+ * @name decryptsFile
+ * @brief decrypts file
+ *
+ * @developer:
+ *
+ */
 
-
+void decryptFile(void);

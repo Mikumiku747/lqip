@@ -53,3 +53,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+.idea
+.DS_Store
+cmake-build-debug
+CMakeLists.txt
