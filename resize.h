@@ -1,7 +1,7 @@
 /*
  * resize.h
  * Developer: Daniel Bui
- * Student #: 
+ * Student #: 12518371
  * Takes image data and produces a tiny interpolated version of it.
  * 
  * Main tasks:
