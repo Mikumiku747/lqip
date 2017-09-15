@@ -18,6 +18,11 @@
  * @TODO:
  *
  */
+ 
+/* Include Guard. */
+#ifndef ENCODE_H
+#define ENCODE_H
+
 
 /**
  * @name imageEncoder
@@ -29,4 +34,4 @@
 char *imageEncoder(void);
 
 
-
+#endif

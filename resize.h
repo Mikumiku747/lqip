@@ -1,5 +1,5 @@
 /**
- * @file: blur.c
+ * @file: resize.h
  * @subject: 48430 Embedded C - Assignment 3
  * @developers:
  *   @name: Zouhir Chahoud @student_id: 11763745
@@ -20,6 +20,10 @@
  */
 
 
+/* Include Guard. */
+#ifndef RESIZE_H
+#define RESIZE_H
+
 /**
  * @name ratioCalculator
  * @brief accepts the current image width and height and returns new width and height values keeping the ratio
@@ -31,7 +35,6 @@
  * @param newWidth
  * @param newHeight
  */
-
 void ratioCalculator(int width, int height, int *newWidth, int *newHeight);
 
 /**
@@ -47,3 +50,4 @@ void ratioCalculator(int width, int height, int *newWidth, int *newHeight);
 void imageResizer(char *uri, int width, int height);
 
 
+#endif

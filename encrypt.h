@@ -19,6 +19,10 @@
  *
  */
 
+/* Include Guard. */
+#ifndef ENCRYPTION_H
+#define ENCRYPTION_H
+
 
 /**
  * @name encryptFile
@@ -36,5 +40,7 @@ void encryptFile(void);
  * @developer:
  *
  */
-
 void decryptFile(void);
+
+
+#endif
