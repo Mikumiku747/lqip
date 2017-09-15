@@ -2,7 +2,7 @@
  * @file: resize.h
  * @subject: 48430 Embedded C - Assignment 3
  * @developers:
- *   @name: Daniel Bui     @student_id: 
+ *   @name: Daniel Bui     @student_id: 12518371
  *   @name:                @student_id:
  *   @name:                @student_id:
  *   @name:                @student_id:
