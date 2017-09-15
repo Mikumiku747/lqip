@@ -2,7 +2,7 @@
  * @file: encrypt.c
  * @subject: 48430 Embedded C - Assignment 3
  * @developers:
- *   @name: Zouhir Chahoud @student_id: 11763745
+ *   @name: Owen Buckingham@student_id: 12466076
  *   @name:                @student_id:
  *   @name:                @student_id:
  *   @name:                @student_id:
