@@ -15,6 +15,8 @@
 
 /* Include the header for this code. */
 #include "argparse.h"
+/* Other includes neccessary to compile. */
+#include <string.h>
 
 /**
  * @name checkFlag
@@ -42,6 +44,7 @@ int checkFlag(char flagChar, int argc, char **argv) {
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -52,5 +55,32 @@ int checkFlag(char flagChar, int argc, char **argv) {
  * See Header for details.
  */
 char *checkOption(char flagChar, int argc, char **argv) {
+	/* Loop counter for argc */
+	int currentArg;
+	
+	/* argv is an array of strings, argc elements long. We're looking for a
+	specific flag and then returning a COPY of the string after the flag. */
+	
+	/* Loop through the arguments. */
+	for (currentArg = 1; currentArg < argc; currentArg++) {
+		/* Check to see if it's a flag, and if it's our flag. We make
+		use of operator short circuiting to ensure we don't read past 
+		the end of an unallocated string. */
+		if (
+			argv[currentArg][0] == '-' &&
+			argv[currentArg][1] == flagChar
+		) {
+			/* Now, we have to make sure that there's an option 
+			after this one. We can return that. */
+			if (currentArg + 1 < argc) {
+				/* Duplicate and return the string if OK. */
+				char *option = strdup(argv[currentArg+1]);
+				return (option ? option : NULL);
+			}
+		}
+	
+	}
+	/* Couldn't find the flag, return NULL. */
+	return NULL;
 	
 }
