@@ -19,6 +19,7 @@
  *
  */
 
+
 /* Include Guard. */
 #ifndef RESIZE_H
 #define RESIZE_H
