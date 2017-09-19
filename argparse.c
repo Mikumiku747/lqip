@@ -17,6 +17,7 @@
 #include "argparse.h"
 /* Other includes neccessary to compile. */
 #include <string.h>
+/* strdup */
 
 /**
  * @name checkFlag
