@@ -23,8 +23,8 @@
 #include <string.h>
  
 /* Include Guard. */
-#ifndef ENCODE_H
-#define ENCODE_H
+#ifndef BASE64_H
+#define BASE64_H
 
 /**
  * 64 character table for converting to Base64
