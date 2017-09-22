@@ -19,6 +19,8 @@
  *
  */
 
+ #include "base64.h"
+
  /**
  * 64 character table for converting to Base64
  */
