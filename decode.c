@@ -19,7 +19,7 @@
 #include <stdio.h>
 /* fopen, fread, flcose, printf, fprintf, stderr */
 #include <stdlib.h>
-/* malloc */
+/* malloc, free */
 #include <stdint.h>
 /* Fixed width integer types (uint8_t, uint32_t, size_t, etc.) */
  
@@ -53,7 +53,8 @@ void decodeImage(
 	/* Char buffer pointer which we'll fill in. */
 	char *imgData_p;
 	
-	/* Set defaults for the results so we can return if we encounter an error. */
+	/* Set defaults for the results so we can return if we encounter an error. 
+	*/
 	*rgbaArray_p = NULL;
 	*width_p = NULL;
 	*height_p = NULL;
@@ -84,8 +85,11 @@ void decodeImage(
 		free(imgData_p);
 		/* Move back to the start of the file. */
 		fseek(imgFile, 0, SEEK_SET);
-		printf("bmp decoder used on %s\n", imgFileName);
+		/*DEBUG*/printf("bmp decoder used on %s\n", imgFileName);
 		bmpDecode(imgFile, rgbaArray_p, width_p, height_p);
+		/* Free up the file. */
+		fclose(imgFile);
+		return;
 	}
 }
 
@@ -100,12 +104,16 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 	char *info_p;
 	uint32_t *palette_p;
 	char *data_p;
-	/* Sizes of the file, header, and data section offset. */
-	size_t fileSize, dataOffset;
-	/* Placeholders for the size, until we can be sure we have a valid image. */
+	/* Sizes of the file, header, color depth, and data section offset. */
+	size_t fileSize, dataOffset, bpc;
+	/* Placeholders for the size, until we can be sure we have a valid 
+	image. Same for destination buffer. */
 	int width, height;
-	/* Variables to store color depth, compression method, palette size. */
-	int bpp, compressionMethod, colorPaletteSize;
+	unsigned char *rgbaBuffer;
+	/* Variables to store bit depth, compression method, palette size, color 
+	table flag, row, column. */
+	int bpp, compressionMethod, colorPaletteSize, colorPalettePresent, row, 
+		col;
 	/* Provide sane defaults so that if we exit early the caller can tell an 
 	error occured. */
 	*rgbaArray_p = NULL;
@@ -161,7 +169,12 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 		/* Get the image dimensions. */
 		width = *(uint32_t *)(info_p);
 		height = *(uint32_t *)(info_p + 4);
+		/* If the height is negative, it means the image is encoded upside 
+		down, that's OK, we'll take care of it. */
+		if (width < 0) { width *= -1; }
+		/* Bit depth and color depth. */
 		bpp = *(uint16_t *)(info_p + 10);
+		bpc = sizeof(uint32_t);
 		/* Check to make sure a supported compression method is used. */
 		switch (*(uint32_t *)(info_p + 12)) {
 		case 0:
@@ -183,12 +196,115 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 		free(info_p);
 		/* DEBUG: Displays the info we've gathered. */
 		printf("Img info:\nWidth: %d Height %d Depth %d\n"
-			"CompressionMethod %d Palette size: %d\n", width, height, bpp, 
-			compressionMethod, colorPaletteSize);
+			"CompressionMethod %d Palette size: %d\n"
+			"Color Size: %d Header size: %d, Data pos: %d\n", width, height, 
+			bpp, compressionMethod, colorPaletteSize, bpc, 40, dataOffset);
 
 		/* Now that we have all the critical info, we can read the color 
-		palette in. */
-		palette_p = malloc(sizeof(uint32_t)*colorPaletteSize);
+		palette in. That is, if it exists. If it doesn't, then we need to
+		make sure we don't use it. */
+		if (dataOffset != 54) {
+			palette_p = malloc(bpc*colorPaletteSize);
+			if (!palette_p) {
+				fprintf(stderr, "Error allocating memory\n");
+				return;
+			}
+			if (fread(palette_p, bpc, colorPaletteSize, imgFile) 
+				!= colorPaletteSize) {
+				fprintf(stderr, "Error reading image file\n");
+				free(palette_p);
+				return;
+			}
+			/* DEBUG: For reference, we'll print out the first 16 entries of 
+			the color palette. */
+			int colCount;
+			printf("Color Palette: \n");
+			for (colCount = 0; colCount < 16; colCount++) {
+				uint32_t color = *(uint32_t *)(palette_p + 
+					colCount * sizeof(uint32_t));
+				printf("%d-R:%d-G:%d-B%d\n", colCount, (color >> 0) & 0xFF, 
+					(color >> 8) & 0xFF, (color >> 16) & 0xFF);
+			}
+			colorPalettePresent = 1;
+			/* Seek to make sure we're really at the data now.*/
+			fseek(imgFile, dataOffset, SEEK_SET);
+		} else {
+			/* WELP: Turns out there is no color table in this image for some 
+			reason, but as long as we're at 16 BPP or higher that's OK. */
+			if (bpp <= 16) {
+				fprintf(stderr, 
+					"BMP decoding: No color table for indexed bitmap.");
+				free(palette_p);
+				return;
+			}
+			/*DEBUG*/printf("No color palette detected!\n");
+			/* Seek to make sure we're really at the data now.*/
+			fseek(imgFile, dataOffset, SEEK_SET);
+			colorPalettePresent = 0;
+		}
+		/* Now we can get to the actual decoding. We calculate the row size and
+		then read in as many rows as the image is tall. */
+		size_t rowsize = ((bpp * width + 31) / 32) * 4;
+		data_p = malloc(sizeof(char)*rowsize*height);
+		if (!data_p) {
+			fprintf(stderr, "Error allocating memory\n");
+			return;
+		}
+		if (fread(data_p, sizeof(char)*rowsize, height, imgFile) != height) {
+				fprintf(stderr, "Error reading image file\n");
+				free(data_p);
+				free(palette_p);
+				return;
+		}
+		switch (bpp) {
+		case 24:
+			/* 24 bits per pixel, format is R8 G8 B8 (red being the LSByte and
+			green being the MSByte. */
+			/* Finally, we can actually allocate our destination buffer. The 
+			format there is R8 G8 B8 A8. */
+			/*DEBUG*/printf("Begin decode...");
+			rgbaBuffer = malloc(sizeof(char) * 4 * width*height);
+			if (!rgbaBuffer) {
+				fprintf(stderr, "Error allocating memory\n");
+				free(data_p);
+				free(palette_p);
+				return;
+			}
+			int rowOffset, pxOffset;
+			/* Iterate through each row in the image. */
+			for (rowOffset = 0; rowOffset < height; rowOffset++) {
+				/* Iterate through each pixel in the image. */
+				for (pxOffset = 0; pxOffset < width; pxOffset++) {
+					/* RED */
+					rgbaBuffer[rowOffset * width * 4 + pxOffset * 4 + 0] =
+						data_p[rowOffset * rowsize + pxOffset * 3 + 2];
+					/* GREEN */
+					rgbaBuffer[rowOffset * width * 4 + pxOffset * 4 + 1] =
+						data_p[rowOffset * rowsize + pxOffset * 3 + 1];
+					/* BLUE */
+					rgbaBuffer[rowOffset * width * 4 + pxOffset * 4 + 2] =
+						data_p[rowOffset * rowsize + pxOffset * 3 + 0];
+					/* ALPHA */
+					rgbaBuffer[rowOffset * width * 4 + pxOffset * 4 + 3] =
+						0xFF; /* No alpha data in image. */
+				}
+			}
+			/*DEBUG*/printf("Done\n");
+			/* The decoding was successful! We can now assign all the output 
+			values and return! */
+			*rgbaArray_p = rgbaBuffer;
+			*width_p = width;
+			*height_p = height;
+			/* And finally, free up all those resources we're using. */
+			free(data_p);
+			free(palette_p);
+			break;
+		default:
+			fprintf(stderr, "BMP Decoding: Non-supported bit depth mode\n");
+			free(data_p);
+			free(palette_p);
+			return;
+		}
 		break;
 
 	default:
