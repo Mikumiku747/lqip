@@ -31,7 +31,7 @@
  * @developer:
  *
  */
-void encryptFile(void);
+char *encryptFile(char plaintext[], int textLen, char password[]);
 
 /**
  * @name decryptsFile
@@ -40,7 +40,7 @@ void encryptFile(void);
  * @developer:
  *
  */
-void decryptFile(void);
+char *decryptFile(char plaintext[], int textLen, char password[]);
 
 
 #endif
