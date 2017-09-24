@@ -51,7 +51,9 @@ float ratioCalculator(int width, int height, int targetWidth, int *newWidth_p, i
  * @param width
  * @param height
  */
-void imageResizer(const char *rgbaBufferIn, char **rgbaBufferOut, int width, int height);
+void imageResizer(const char *rgbaBufferIn, int widthIn, int heightIn,
+	char **rgbaBufferOut_p, int *widthOut_p, int *heightOut_p,
+	int targetWidth);
 
 
 #endif

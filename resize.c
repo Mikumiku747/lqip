@@ -17,6 +17,10 @@
 #include "resize.h"
 
 /* Include the other necessary system libaries. */
+#include <stdlib.h>
+/* NULL, malloc, free */
+#include <stdio.h>
+/* fprintf, sterr*/
 
 /**
  * @name ratioCalculator
@@ -47,4 +51,64 @@ float ratioCalculator(int width, int height, int targetWidth, int *newWidth_p, i
  *
  * See Header for details. 
  */
-void imageResizer(const char *rgbaBufferIn, char **rgbaBufferOut, int width, int height);
+void imageResizer(const char *rgbaBufferIn, int widthIn, int heightIn, 
+	char **rgbaBufferOut_p, int *widthOut_p, int *heightOut_p, 
+	int targetWidth) {
+	/* Use two loops to iterate through each of the images and access pixels
+	at a ratio faster in one image than the other. */
+
+	/* Loop counters. */
+	int row, col;
+
+
+	/* Calculate the ratio to move through the source compared to the 
+	original. */
+	float ratio = ratioCalculator(widthIn, heightIn, targetWidth, widthOut_p, heightOut_p);
+	int ratioI = (int)ratio;
+
+	/* Allocate space for the new resized buffer. */
+	*rgbaBufferOut_p = malloc(sizeof(char) * 4 * (*widthOut_p)*(*heightOut_p));
+	if (!*rgbaBufferOut_p) {
+		fprintf(stderr, "Error allocating memory!\n");
+		return;
+	}
+	
+	/* Fill in each row of the destination. */
+	for (row = 0; row < *heightOut_p; row++) {
+		/* Fill in each pixel of the destination. */
+		for (col = 0; col < *widthOut_p; col++) {
+			/* We copy from a multiplied position in the source to the direct 
+			position in the offset. */
+			/* RED. */ (*rgbaBufferOut_p)[
+				row * (*widthOut_p) * 4 +
+				col * 4 + 0
+			] = rgbaBufferIn[
+				row * (widthIn) * 4 * ratioI +
+				col * 4 * ratioI + 0
+			];
+			/* GREEN. */ (*rgbaBufferOut_p)[
+				row * (*widthOut_p) * 4 +
+					col * 4 + 1
+			] = rgbaBufferIn[
+				row * (widthIn) * 4 * ratioI +
+					col * 4 * ratioI + 1
+			];
+			/* BLUE. */ (*rgbaBufferOut_p)[
+				row * (*widthOut_p) * 4 +
+					col * 4 + 2
+			] = rgbaBufferIn[
+				row * (widthIn) * 4 * ratioI +
+					col * 4 * ratioI + 2
+			];
+			/* ALPHA. */ (*rgbaBufferOut_p)[
+				row * (*widthOut_p) * 4 +
+					col * 4 + 3
+			] = rgbaBufferIn[
+				row * (widthIn) * 4 * ratioI +
+					col * 4 * ratioI + 3
+			];
+		}
+	}
+	/* all went well, we done. */
+
+}
