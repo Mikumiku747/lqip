@@ -40,6 +40,7 @@ void getImageList(void);
  * @developer:
  *
  */
-void decodeImage(void);
+void decodeImage(const char imgFileName[], char **rgbaArray_p, 
+	int *width_p, int *height_p);
 
 #endif
