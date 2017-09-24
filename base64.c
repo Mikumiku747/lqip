@@ -121,17 +121,18 @@ void encodeChunk( unsigned char in_chunk[], char b64_out_chunk[], int len ) {
  * Example usage please keep commented
  * @return
  */
+/*
+int main() {
+    char srcstr[] = "hello world";
+    char tobase64[1024] = "";
+    char tostr[1024] = "";
 
-//int main() {
-//    char srcstr[] = "hello world";
-//    char tobase64[1024] = "";
-//    char tostr[1024] = "";
-//
-//    encode(srcstr, tobase64);
-//    printf("encoded:\n[%s]\n", srcstr, tobase64);
-//    printf("\n");
-//    decode(tobase64, tostr);
-//    printf("decoded:\n[%s]\n", tobase64, tostr);
-//
-//    return 0;
-//}
+    encode(srcstr, tobase64);
+    printf("encoded:\n[%s]\n", srcstr, tobase64);
+    printf("\n");
+    decode(tobase64, tostr);
+    printf("decoded:\n[%s]\n", tobase64, tostr);
+
+    return 0;
+}
+*/

@@ -88,7 +88,7 @@ void decodeImage(
 		/*DEBUG*/printf("bmp decoder used on %s\n", imgFileName);
 		bmpDecode(imgFile, rgbaArray_p, width_p, height_p);
 		/* Free up the file. */
-		fclose(imgFile);
+		/*fclose(imgFile);*/
 		return;
 	}
 }
