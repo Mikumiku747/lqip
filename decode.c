@@ -62,18 +62,19 @@ void decodeImage(
 	/* Open the image file to determine the type of file it is. */
 	imgFile = fopen(imgFileName, "r");
 	if (!imgFile) {
-		fprintf(stderr, "Error reading image file %s\n", imgFileName);
+		fprintf(stderr, "Error opening image file %s, "
+			"check that it exists\n", imgFileName);
 		return;
 	}
 	/* Read in the first 4 bytes. */
 	imgData_p = malloc(sizeof(char)*4);
 	if (!imgData_p) {
-		fprintf(stderr, "Error allocating memory\n");
+		fprintf(stderr, "Error allocating image data memory\n");
 		fclose(imgFile);
 		return;
 	}
 	if (fread(imgData_p, sizeof(char), 4, imgFile) != 4) {
-		fprintf(stderr, "Error reading image file\n");
+		fprintf(stderr, "Error reading image file first bytes\n");
 		free(imgData_p);
 		fclose(imgFile);
 		return;
@@ -124,11 +125,11 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 	begin decoding. */
 	header_p = malloc(sizeof(char) * 14);
 	if (!header_p) {
-		fprintf(stderr, "Error allocating memory\n");
+		fprintf(stderr, "Error allocating BMP header memory\n");
 		return;
 	}
 	if (fread(header_p, sizeof(char), 14, imgFile) != 14) {
-		fprintf(stderr, "Error reading image file\n");
+		fprintf(stderr, "Error reading BMP image file header\n");
 		free(header_p);
 		return;
 	}
@@ -142,11 +143,11 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 	the format. */
 	info_p = malloc(sizeof(char) * 4);
 	if (!info_p) {
-		fprintf(stderr, "Error allocating memory\n");
+		fprintf(stderr, "Error allocating BMP info start memory\n");
 		return;
 	}
 	if (fread(info_p, sizeof(char), 4, imgFile) != 4) {
-		fprintf(stderr, "Error reading image file\n");
+		fprintf(stderr, "Error reading BMP image info block start\n");
 		free(info_p);
 		return;
 	}
@@ -158,11 +159,11 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 		free(info_p);
 		info_p = malloc(sizeof(char) * 36);
 		if (!info_p) {
-			fprintf(stderr, "Error allocating memory\n");
+			fprintf(stderr, "Error allocating BMP info memory\n");
 			return;
 		}
 		if (fread(info_p, sizeof(char), 36, imgFile)  != 36) {
-			fprintf(stderr, "Error reading image file\n");
+			fprintf(stderr, "Error reading image BMP info\n");
 			free(info_p);
 			return;
 		}
@@ -183,7 +184,8 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			break;
 		default:
 			/* Unknown / unsupported compression method. */
-			fprintf(stderr, "Unsupported compression method\n");
+			fprintf(stderr, "Unsupported compression method: %d\n",
+				(*(uint32_t *)(info_p + 12)));
 			free(info_p);
 			return;
 		}
@@ -206,12 +208,14 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 		if (dataOffset != 54) {
 			palette_p = malloc(bpc*colorPaletteSize);
 			if (!palette_p) {
-				fprintf(stderr, "Error allocating memory\n");
+				fprintf(stderr, 
+					"Error allocating palette memory\n");
 				return;
 			}
 			if (fread(palette_p, bpc, colorPaletteSize, imgFile) 
 				!= colorPaletteSize) {
-				fprintf(stderr, "Error reading image file\n");
+				fprintf(stderr, 
+					"Error reading BMP palette data\n");
 				free(palette_p);
 				return;
 			}
@@ -233,7 +237,8 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			reason, but as long as we're at 16 BPP or higher that's OK. */
 			if (bpp <= 16) {
 				fprintf(stderr, 
-					"BMP decoding: No color table for indexed bitmap.");
+					"BMP decoding Error: No color table for"
+					" indexed bitmap.");
 				free(palette_p);
 				return;
 			}
@@ -247,11 +252,11 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 		size_t rowsize = ((bpp * width + 31) / 32) * 4;
 		data_p = malloc(sizeof(char)*rowsize*height);
 		if (!data_p) {
-			fprintf(stderr, "Error allocating memory\n");
+			fprintf(stderr, "Error allocating BMP data memory\n");
 			return;
 		}
 		if (fread(data_p, sizeof(char)*rowsize, height, imgFile) != height) {
-				fprintf(stderr, "Error reading image file\n");
+				fprintf(stderr, "Error reading BMP data\n");
 				free(data_p);
 				free(palette_p);
 				return;
@@ -289,7 +294,6 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 						0xFF; /* No alpha data in image. */
 				}
 			}
-			/*DEBUG*/printf("Done\n");
 			/* The decoding was successful! We can now assign all the output 
 			values and return! */
 			*rgbaArray_p = rgbaBuffer;
@@ -300,6 +304,7 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			if (colorPalettePresent == 1) {
 				free(palette_p);
 			}
+			/*DEBUG*/printf("Done\n");
 			break;
 		default:
 			fprintf(stderr, "BMP Decoding: Non-supported bit depth mode\n");
