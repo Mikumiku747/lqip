@@ -297,7 +297,9 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			*height_p = height;
 			/* And finally, free up all those resources we're using. */
 			free(data_p);
-			free(palette_p);
+			if (colorPalettePresent == 1) {
+				free(palette_p);
+			}
 			break;
 		default:
 			fprintf(stderr, "BMP Decoding: Non-supported bit depth mode\n");
