@@ -38,7 +38,7 @@ char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
 
     output_str[0] = '\0';
     phase = 0; i=0;
-    while(b64_input[i]) {
+    for(i=0; i < strlen(b64_input); i++) {
         c = (int) b64_input[i];
         if(c == '=') {
             decodeChunk(in, output_str);
@@ -80,10 +80,10 @@ void decodeChunk(unsigned char in_chunk[], char *output_chunk) {
 void encode(char *input_str, char *b64_output) {
     unsigned char in[3];
     int i, len = 0;
-    int j = 0;
+    int j;
 
     b64_output[0] = '\0';
-    while(input_str[j]) {
+    for(j=0; j < strlen(input_str); j++) {
         len = 0;
         for(i=0; i<3; i++) {
             in[i] = (unsigned char) input_str[j];

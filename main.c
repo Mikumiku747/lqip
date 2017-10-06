@@ -82,13 +82,7 @@ int main(int argc, char **argv) {
 	of bytes in the RGBA array since the inflation ratio when encoding as 
 	base64 is 4 characters per 3 btyes, or 1.33, so 1.4 is on the safe side. 
 	*/
-	char *b64String = malloc(sizeof(char) * 4 * widthSml*heightSml*1.4);
-	if (!b64String) {
-		fprintf(stderr, "Error allocating memory\n");
-		free(imgName);
-		free(rgbaBufferSml);
-		return 1;
-	}
+	char b64String[strlen(rgbaBufferSml) + 1];
 	encode(rgbaBufferSml, b64String);
 	/* Display the resulting YAML to the command line: */
 	printf("\n\n<yaml>\n\t<img>"
@@ -134,7 +128,10 @@ int main(int argc, char **argv) {
 	}
 
 	/* Release any resources we're still holding. */
-	free(b64String);
+	/**
+	 * we are not allocating this
+	 * free(b64String);
+	**/ 
 
 	return 0;
 	
