@@ -22,6 +22,9 @@
 #include <stdio.h>
 /* fprintf, sterr*/
 
+/* Macro for controlling excess print output. */
+/*#define DEBUG_OUTPUT*/
+
 /**
  * @name ratioCalculator
  * @brief accepts the current image width and height and returns the ratio 
@@ -34,13 +37,17 @@ float ratioCalculator(int width, int height, int targetWidth, int *newWidth_p, i
 	/* We simply find the ratio between old and new width and apply that to 
 	scale the old height to the new height. */
 	float ratio = (float)width / (float)targetWidth;
+#ifdef DEBUG_OUTPUT
 	/*DEBUG*/printf("Ratio: %f\n", ratio);
+#endif
 	if (newWidth_p) {
 		*newWidth_p = (int)((float)width / ratio);
 	}
 	if (newHeight_p) {
 		*newHeight_p = (int)((float)height / ratio);
+#ifdef DEBUG_OUTPUT
 		/*DEBUG*/printf("Old: %dx%d New: %dx%d\n", width, height, *newWidth_p, *newHeight_p);
+#endif
 	}	
 	return ratio;
 }

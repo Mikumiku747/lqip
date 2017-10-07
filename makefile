@@ -4,7 +4,7 @@
 # Toolchain options
 # ============================================================================
 # These options configure the compiler and linker
-CFLAGS := -Wall -Wextra -ansi -g -MMD
+CFLAGS := -Wall -Wextra -ansi -g -MMD -std=c90 -D DEBUG_OUTPUT -D VERBOSE_OUTPUT
 LDFLAGS := -lm
 # Note that we're using -Wextra, this means that lots of warnings which aren't
 # necessarily bad will show up, but before dismissing a warning, you should be
@@ -30,7 +30,7 @@ lqip: $(OBJFILES)
 # Object file recipe, tells make how to compile the C sources into object 
 # files. 
 %.o: %.c
-	gcc -c $(CFLAGS) $< -o $@
+	gcc $(CFLAGS) -c $< -o $@
 
 # Cleaning recipie, removes all build files from the source directory, good 
 # for ensuring that evey file gets built from scratch to check for build 

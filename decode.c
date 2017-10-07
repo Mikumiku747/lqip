@@ -22,6 +22,11 @@
 /* malloc, free */
 #include <stdint.h>
 /* Fixed width integer types (uint8_t, uint32_t, size_t, etc.) */
+#include <dirent.h>
+/* opendir, readdir */
+ 
+/* Macro to control the amount of debug statements. */
+/*#define DEBUG_OUTPUT*/
  
 /* Function declarations for internal functions. */
 void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p, int *height_p);
@@ -33,7 +38,69 @@ int intPow(int n, int exponent);
  *
  * See header for details.
  */
-void getImageList(void);
+imgData_t *getImageList(char *dirName) {
+	/* First, we need to get a list of all the files which should be
+	processed. We'll store them in a linked list along with other data
+	that should be associated with them. */
+	imgData_t *listHead = NULL;
+	imgData_t *prevNode = NULL;
+	imgData_t *curNode = NULL;
+	DIR *directory_p;
+	struct dirent *entry_p;
+	/* Open the directory. */
+	directory_p = opendir(dirName);
+	if (!directory_p) {
+		fprintf(stderr, "Error opening directory: %s \n", dirName);
+		return NULL;
+	}
+	/* Read entries from the directory. */
+	while ((entry_p = readdir(directory_p))) {
+		/* First, ignore if it isn't the right type or not an image 
+		file (bmp or gif extension). The magic 8 in there is for
+		checking if it's a file or directory name. */
+		if (entry_p->d_name[0] == '.' ||
+			entry_p->d_type != 8 ||
+			(!testext(entry_p->d_name, ".bmp") &&
+			 !testext(entry_p->d_name, ".gif"))
+		) {
+			continue; 
+		}
+		/* We should at least try to process this file. Allocate a node
+		for it. */
+#ifdef DEBUG_OUTPUT
+		/*DEBUG*/printf("Tracking %s...", entry_p->d_name);
+#endif
+		if (listHead == NULL) {
+			listHead = malloc(sizeof(imgData_t));
+			curNode = listHead;
+		} else {
+			prevNode->next = malloc(sizeof(imgData_t));
+			curNode = prevNode->next;
+		}
+		if (!curNode) {
+			fprintf(stderr, "Error allocating memory for list node\n");
+			return NULL;
+		}
+		curNode->fileName = strdup(entry_p->d_name);
+		if (!curNode->fileName) {
+			fprintf(stderr, "Error copying file name\n");
+			return NULL;
+		}
+		/* Provide sane defaults for all the data fields. */
+		curNode->rgbaBufferBig = NULL;
+		curNode->rgbaBufferSml = NULL;
+		curNode->widthBig = 0;
+		curNode->widthSml = 0;
+		curNode->heightSml = 0;
+		curNode->heightSml = 0;
+		curNode->failedProcessing = 0;
+		prevNode = curNode;
+#ifdef DEBUG_OUTPUT
+		printf("Done.\n");
+#endif
+	}
+	return listHead;
+}
 
 /**
  * @name getImageList
@@ -86,7 +153,9 @@ void decodeImage(
 		free(imgData_p);
 		/* Move back to the start of the file. */
 		fseek(imgFile, 0, SEEK_SET);
+#ifdef DEBUG_OUTPUT
 		/*DEBUG*/printf("bmp decoder used on %s\n", imgFileName);
+#endif
 		bmpDecode(imgFile, rgbaArray_p, width_p, height_p);
 		/* Free up the file. */
 		/*fclose(imgFile);*/
@@ -196,11 +265,13 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 		colorPaletteSize= colorPaletteSize ? colorPaletteSize : intPow(2,bpp);
 		/* Free the info header now that we're done with it. */
 		free(info_p);
+#ifdef DEBUG_OUTPUT
 		/* DEBUG: Displays the info we've gathered. */
 		printf("Img info:\nWidth: %d Height %d Depth %d\n"
 			"CompressionMethod %d Palette size: %d\n"
 			"Color Size: %d Header size: %d, Data pos: %d\n", width, height, 
 			bpp, compressionMethod, colorPaletteSize, bpc, 40, dataOffset);
+#endif
 
 		/* Now that we have all the critical info, we can read the color 
 		palette in. That is, if it exists. If it doesn't, then we need to
@@ -222,6 +293,7 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			/* DEBUG: For reference, we'll print out the first 16 entries of 
 			the color palette. */
 			int colCount;
+#ifdef DEBUG_OUTPUT
 			printf("Color Palette: \n");
 			for (colCount = 0; colCount < 16; colCount++) {
 				uint32_t color = *(uint32_t *)(palette_p + 
@@ -229,6 +301,7 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 				printf("%d-R:%d-G:%d-B%d\n", colCount, (color >> 0) & 0xFF, 
 					(color >> 8) & 0xFF, (color >> 16) & 0xFF);
 			}
+#endif
 			colorPalettePresent = 1;
 			/* Seek to make sure we're really at the data now.*/
 			fseek(imgFile, dataOffset, SEEK_SET);
@@ -242,7 +315,9 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 				free(palette_p);
 				return;
 			}
+#ifdef DEBUG_OUTPUT
 			/*DEBUG*/printf("No color palette detected!\n");
+#endif
 			/* Seek to make sure we're really at the data now.*/
 			fseek(imgFile, dataOffset, SEEK_SET);
 			colorPalettePresent = 0;
@@ -267,7 +342,9 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			green being the MSByte. */
 			/* Finally, we can actually allocate our destination buffer. The 
 			format there is R8 G8 B8 A8. */
+#ifdef DEBUG_OUTPUT
 			/*DEBUG*/printf("Begin decode...");
+#endif
 			rgbaBuffer = malloc(sizeof(char) * 4 * width*height);
 			if (!rgbaBuffer) {
 				fprintf(stderr, "Error allocating memory\n");
@@ -304,7 +381,9 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			if (colorPalettePresent == 1) {
 				free(palette_p);
 			}
+#ifdef DEBUG_OUTPUT
 			/*DEBUG*/printf("Done\n");
+#endif
 			break;
 		default:
 			fprintf(stderr, "BMP Decoding: Non-supported bit depth mode\n");
@@ -326,8 +405,18 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 /**
  * @name intPow
  * @brief Short and sweet exponentiation implementation to avoid math.h 
- * dependency. 
+ * dependency for this library. 
  */
 int intPow(int n, int exponent) {
 	return (exponent ? n * intPow(n, exponent - 1) : 1);
+}
+
+/**
+	@name testext
+	@brief Tests a filename to see if it ends in the given extension. 
+*/
+int testext(char *filename, char *ext)
+{
+        char *nameend = filename + (strlen(filename) - strlen(ext));
+        return (strcmp(nameend, ext) ? 0 : 1);
 }
