@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
 				curNode->failedProcessing = 1;
 				continue;
 			}
-			encode(curNode->rgbaBufferSml, curNode->base64Buffer);
+			encode(curNode->rgbaBufferSml, curNode->widthSml*curNode->heightSml*sizeof(char)*4, curNode->base64Buffer);
 #ifdef DEBUG_OUTPUT
 			/*DEBUG*/printf("Done.\n");
 #endif
