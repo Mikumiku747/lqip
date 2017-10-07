@@ -82,8 +82,9 @@ int main(int argc, char **argv) {
 	of bytes in the RGBA array since the inflation ratio when encoding as 
 	base64 is 4 characters per 3 btyes, or 1.33, so 1.4 is on the safe side. 
 	*/
-	char b64String[strlen(rgbaBufferSml) + 1];
-	encode(rgbaBufferSml, b64String);
+	int inputBufferSize = widthSml * heightSml * 4;
+	char b64String[inputBufferSize + 1];
+	encode(rgbaBufferSml, inputBufferSize, b64String);
 	/* Display the resulting YAML to the command line: */
 	printf("\n\n<yaml>\n\t<img>"
 		"\n\t\t<name>%s</name>"

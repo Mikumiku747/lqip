@@ -53,7 +53,6 @@ char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
                 in[0]=in[1]=in[2]=in[3]=0;
             }
         }
-        i++;
     }
 }
 
@@ -77,13 +76,13 @@ void decodeChunk(unsigned char in_chunk[], char *output_chunk) {
  *
  * @notes:
  */
-void encode(char *input_str, char *b64_output) {
+void encode(char *input_str, int inputBufferSize,char *b64_output) {
     unsigned char in[3];
     int i, len = 0;
     int j;
 
     b64_output[0] = '\0';
-    for(j=0; j < strlen(input_str); j++) {
+    for(j=0; j < inputBufferSize; j++) {
         len = 0;
         for(i=0; i<3; i++) {
             in[i] = (unsigned char) input_str[j];

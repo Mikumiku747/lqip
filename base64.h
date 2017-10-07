@@ -32,13 +32,14 @@
  * @developer Zouhir Chahoud 11763745
  *
  * @param input_str input string from image buffer
+ * @param inputBufferSize buffer Size
  * @param b64_output base64 encoded output string
  *
  * @description: this function encodes a string to Base64 and adds padding if any was needed
  *
  * @TODO: research if unsigned char is the best return value for consumers
  */
-void encode(char *input_str, char *b64_output);
+void encode(char *input_str, int inputBufferSize, char *b64_output);
 
 
 /**
