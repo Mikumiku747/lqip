@@ -165,9 +165,6 @@ int main(int argc, char **argv) {
 			free(etext);
 			free(enkey);
 		}
-
-		/* Release any resources we're still holding. */
-		free(b64String);
 	}
 	
 	/* If specified, do batch image conversion. */

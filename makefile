@@ -4,7 +4,7 @@
 # Toolchain options
 # ============================================================================
 # These options configure the compiler and linker
-CFLAGS := -Wall -Wextra -ansi -g -MMD -std=c90 -D DEBUG_OUTPUT -D VERBOSE_OUTPUT
+CFLAGS := -Wall -Wextra -ansi -g -MMD -D DEBUG_OUTPUT -D VERBOSE_OUTPUT
 LDFLAGS := -lm
 # Note that we're using -Wextra, this means that lots of warnings which aren't
 # necessarily bad will show up, but before dismissing a warning, you should be
