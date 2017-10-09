@@ -32,7 +32,8 @@ char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
  * @notes:
  */
  void decode(char *b64_input, char *output_str) {
-    int c, phase, i;
+    size_t i;
+	int c, phase;
     unsigned char in[4];
     char *p;
 
@@ -67,7 +68,7 @@ void decodeChunk(unsigned char in_chunk[], char *output_chunk) {
     out[1] = in_chunk[1] << 4 | in_chunk[2] >> 2;
     out[2] = in_chunk[2] << 6 | in_chunk[3] >> 0;
     out[3] = '\0';
-    strncat(output_chunk, out, sizeof(out));
+    strncat(output_chunk, (char *)out, sizeof(out));
 }
 
 
@@ -111,7 +112,7 @@ void encodeChunk( unsigned char in_chunk[], char b64_out_chunk[], int len ) {
                                                    ((in_chunk[2] & 0xc0) >> 6) ] : '=');
     out[3] = (unsigned char) (len > 2 ? b64_table[ in_chunk[2] & 0x3f ] : '=');
     out[4] = '\0';
-    strncat(b64_out_chunk, out, sizeof(out));
+    strncat(b64_out_chunk, (char *)out, sizeof(out));
 }
 
 

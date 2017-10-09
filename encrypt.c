@@ -16,6 +16,9 @@
 #include "encrypt.h"
 
 #include <stdlib.h>
+/* malloc, free */
+#include <string.h>
+/* strlen */
 
 /**
  * @name encryptFile
@@ -40,7 +43,7 @@ char *encryptFile(char plaintext[], int textLen, char password[]) {
 	for (ptext_count = 0; ptext_count < textLen; ptext_count++) {
 		output[ptext_count] = plaintext[ptext_count] ^ password[pwcount];
 		pwcount++;
-		if (pwcount >= strlen(password)) {
+		if ((size_t)pwcount >= strlen(password)) {
 			pwcount = 0;
 		}
 	}

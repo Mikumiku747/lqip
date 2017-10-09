@@ -19,6 +19,10 @@
 #include <string.h>
 /* strdup */
 
+/* Explicit declaration of strdup since it's not always included in the
+string header. */
+char *strdup(const char *str);
+
 /**
  * @name checkFlag
  * @brief Checks for a specific flag on the command line

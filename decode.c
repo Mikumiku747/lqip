@@ -24,10 +24,14 @@
 /* Fixed width integer types (uint8_t, uint32_t, size_t, etc.) */
 #include <string.h>
 /* strlen, strcat, strcopy. */
- 
+
 /* Macro to control the amount of debug statements. */
 /*#define DEBUG_OUTPUT*/
- 
+
+/* Explicit declaration of strdup since it's not always included in the
+string header. */
+char *strdup(const char *str);
+
 /* Function declarations for internal functions. */
 void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p, int *height_p);
 int intPow(int n, int exponent);
@@ -153,8 +157,8 @@ void decodeImage(
 	/* Set defaults for the results so we can return if we encounter an error.
 	*/
 	*rgbaArray_p = NULL;
-	*width_p = NULL;
-	*height_p = NULL;
+	*width_p = 0;
+	*height_p = 0;
 	
 	/* Open the image file to determine the type of file it is. */
 	imgFile = fopen(imgFileName, "r");
@@ -209,16 +213,15 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 	/* Placeholders for the size, until we can be sure we have a valid 
 	image. Same for destination buffer. */
 	int width, height;
-	unsigned char *rgbaBuffer;
+	char *rgbaBuffer;
 	/* Variables to store bit depth, compression method, palette size, color 
-	table flag, row, column. */
-	int bpp, compressionMethod, colorPaletteSize, colorPalettePresent, row, 
-		col;
+	table flags. */
+	int bpp, compressionMethod, colorPaletteSize, colorPalettePresent;
 	/* Provide sane defaults so that if we exit early the caller can tell an 
 	error occured. */
 	*rgbaArray_p = NULL;
-	*width_p = NULL;
-	*height_p = NULL;
+	*width_p = 0;
+	*height_p = 0;
 
 	/* First step is to get the other useful info out of the header so we can
 	begin decoding. */
@@ -234,6 +237,7 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 	}
 	/* Extract important info from the header. */
 	fileSize = *(uint32_t *)(header_p + 2);
+	fileSize = fileSize; /* Stave off unused variable warnings. */
 	dataOffset = *(uint32_t *)(header_p + 10);
 	/* free the header pointer now that we're done with it. */
 	free(header_p);
@@ -299,8 +303,8 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 		/* DEBUG: Displays the info we've gathered. */
 		printf("Img info:\nWidth: %d Height %d Depth %d\n"
 			"CompressionMethod %d Palette size: %d\n"
-			"Color Size: %d Header size: %d, Data pos: %d\n", width, height, 
-			bpp, compressionMethod, colorPaletteSize, bpc, 40, dataOffset);
+			"Color Size: %.8X Header size: %d, Data pos: %.8X\n", width, height, 
+			bpp, compressionMethod, colorPaletteSize, (unsigned int)bpc, 40, (unsigned int)dataOffset);
 #endif
 
 		/* Now that we have all the critical info, we can read the color 
@@ -314,7 +318,7 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 				return;
 			}
 			if (fread(palette_p, bpc, colorPaletteSize, imgFile) 
-				!= colorPaletteSize) {
+				!= (size_t)colorPaletteSize) {
 				fprintf(stderr, 
 					"Error reading BMP palette data\n");
 				free(palette_p);
@@ -342,7 +346,6 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 				fprintf(stderr, 
 					"BMP decoding Error: No color table for"
 					" indexed bitmap.");
-				free(palette_p);
 				return;
 			}
 #ifdef DEBUG_OUTPUT
@@ -360,7 +363,7 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			fprintf(stderr, "Error allocating BMP data memory\n");
 			return;
 		}
-		if (fread(data_p, sizeof(char)*rowsize, height, imgFile) != height) {
+		if (fread(data_p, sizeof(char)*rowsize, height, imgFile) != (size_t)height) {
 				fprintf(stderr, "Error reading BMP data\n");
 				free(data_p);
 				free(palette_p);
