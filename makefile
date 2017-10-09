@@ -38,6 +38,7 @@ lqip: $(OBJFILES)
 clean: 
 	rm -vf lqip
 	rm -vf *.o *.d
+	rm -vf placeholders.yaml placeholders.enc listing.txt
 
 # PHONY recipes, these are the command-like targets, and will always be run.
 .PHONY: all clean
