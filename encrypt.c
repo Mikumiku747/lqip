@@ -58,6 +58,6 @@ char *encryptFile(char plaintext[], int textLen, char password[]) {
  * See Header for details
  *
 */
-char *decryptFile(char plaintext[], int textLen, char password[]) {
-	return encryptFile(plaintext, textLen, password);
+char *decryptFile(char encryptText[], int textLen, char password[]) {
+	return encryptFile(encryptText, textLen, password);
 }
