@@ -284,6 +284,30 @@ int main(int argc, char **argv) {
 			nextNode_p = curNode->next;
 			free(curNode);
 		}
+		/* If encryption was asked for, use it. */	
+		char *enkey = checkOption('e', argc, argv);
+		if (enkey) {
+			printf("Encrypted output saved to placeholders.enc\n");
+			/* In order to actually accomplish the encryption, we will read the 
+			plaintext output and then encrypt that. */
+			/* Read in the file. */
+			FILE *encfile = fopen("placeholders.yaml", "r");
+			fseek(encfile, 0, SEEK_END);
+			int size = ftell(encfile);
+			fseek(encfile, 0, SEEK_SET);
+			char *ptext = malloc(sizeof(char)*size);
+			fread(ptext, sizeof(char), size, encfile);
+			fclose(encfile);
+			/* Encyrypt. */
+			char *etext = encryptFile(ptext, size, enkey);
+			/* Write. */
+			encfile = fopen("placeholders.enc", "w");
+			fwrite(etext, sizeof(char), size, encfile);
+			fclose(encfile);
+			free(ptext);
+			free(etext);
+			free(enkey);
+		}
 	}
 	return 0;
 }
