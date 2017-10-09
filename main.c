@@ -51,10 +51,86 @@ int main(int argc, char **argv) {
 	char *imgName = checkOption('i', argc, argv);
 	char *dirName = checkOption('d', argc, argv);
 	char *targetSize = checkOption('s', argc, argv);
+	
+	/* Check for the decryption mode. */
+	char *decryptionKey = checkOption('u', argc, argv);
+	if (decryptionKey) {
+		/* Attempt to perform decryption. First, read the encrypted file. */
+		FILE *cryptFile = fopen("placeholders.enc", "r");
+		if (!cryptFile) {
+			fprintf(stderr, "Error opening encrypted placeholders "
+			"(check \"placeholders.enc\" exists and is readable.\n");
+			SAFEFREE(decryptionKey);
+			return 1;
+		}
+		/* Now attempt to open the file to write it to. */
+		FILE *unencOutFile = fopen("placeholders.yaml", "w");
+		if (!unencOutFile) {
+			fprintf(stderr, "Error opening new unencrypted placeholders.yaml"
+			" file (check write permissions).\n");
+			SAFEFREE(decryptionKey);
+			fclose(cryptFile);
+			return 1;
+		}
+		/* Get the length of the encrypted file and read the whole thing. */
+		fseek(cryptFile, 0, SEEK_END);
+		size_t encSize = ftell(cryptFile);
+		fseek(cryptFile, 0, SEEK_SET);
+		char *encBuffer = malloc(sizeof(char)*encSize);
+		if (!encBuffer) {
+			fprintf(stderr, "Error allocating memory for encryption buffer.\n");
+			SAFEFREE(decryptionKey);
+			fclose(unencOutFile);
+			fclose(cryptFile);
+			return 1;
+		}
+		size_t dataRead = fread(encBuffer, sizeof(char), encSize, cryptFile);
+		if (dataRead != encSize) {
+			fprintf(stderr, "Error reading in encrypted file.\n");
+			SAFEFREE(decryptionKey);
+			SAFEFREE(encBuffer);
+			fclose(unencOutFile);
+			fclose(cryptFile);
+			return 1;
+		}
+		/* Decrpyt the whole thing. */
+		char *decryptText = decryptFile(encBuffer, encSize, decryptionKey);
+		if (!decryptText) {
+			fprintf(stderr, "Error in decryption.\n");
+			SAFEFREE(decryptionKey);
+			SAFEFREE(encBuffer);
+			fclose(unencOutFile);
+			fclose(cryptFile);
+			return 1;
+		}
+		if (memcmp(decryptText, "<yaml>", sizeof(char)*6) != 0) {
+			fprintf(stderr, "Warning: Decryption mismatch detected, decryption "
+			"likely failed due to an incorrect password.\n");
+		}
+		/* Write it to the output. */
+		size_t dataWrote = fwrite(decryptText, sizeof(char), encSize, unencOutFile);
+		if (dataWrote != encSize) {
+			fprintf(stderr, "Error writing plaintext to placeholders.enc "
+			"(check write permissions).\n");
+			SAFEFREE(decryptionKey);
+			SAFEFREE(encBuffer);
+			fclose(unencOutFile);
+			fclose(cryptFile);
+			return 1;
+		}
+		/* Free up all the resources. */
+		SAFEFREE(decryptionKey);
+		SAFEFREE(encBuffer);
+		SAFEFREE(decryptText);
+		fclose(unencOutFile);
+		fclose(cryptFile);
+		return 1;
+	}
 	if (!targetSize) {
 		/* Give a hint about usage (they forgot the size option). */
 		fprintf(stderr, "Error: No size provided (use -s option)\n"
-		"Usage: lqip (-i imagename | -d directory) -s size [-e passkey]\n");
+		"Usage: \tlqip (-i imagename | -d directory) -s size [-e passkey]\n"
+			   "\tlqip -u passkey\n");
 		SAFEFREE(imgName);
 		SAFEFREE(dirName);
 		SAFEFREE(targetSize);
@@ -63,7 +139,8 @@ int main(int argc, char **argv) {
 	if ((!imgName && !dirName) || (imgName && dirName)) {
 		/* Give a hint about usage (they forgot the input files). */
 		fprintf(stderr, "Error: Please specify one of -i or -d options\n"
-		"Usage: lqip (-i imagename | -d directory) -s size [-e passkey]\n");
+		"Usage: lqip (-i imagename | -d directory) -s size [-e passkey]\n"
+			   "\tlqip -u passkey\n");
 		SAFEFREE(imgName);
 		SAFEFREE(dirName);
 		SAFEFREE(targetSize);
