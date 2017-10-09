@@ -17,13 +17,13 @@
 #include "decode.h"
 /* Includes for other system headers. */
 #include <stdio.h>
-/* fopen, fread, flcose, printf, fprintf, stderr */
+/* fopen, fread, flcose, printf, fprintf, sprintf, stderr */
 #include <stdlib.h>
-/* malloc, free */
+/* malloc, free, system */
 #include <stdint.h>
 /* Fixed width integer types (uint8_t, uint32_t, size_t, etc.) */
-#include <dirent.h>
-/* opendir, readdir */
+#include <string.h>
+/* strlen, strcat, strcopy. */
  
 /* Macro to control the amount of debug statements. */
 /*#define DEBUG_OUTPUT*/
@@ -39,36 +39,64 @@ int intPow(int n, int exponent);
  * See header for details.
  */
 imgData_t *getImageList(char *dirName) {
-	/* First, we need to get a list of all the files which should be
-	processed. We'll store them in a linked list along with other data
-	that should be associated with them. */
+	/* Since there's an abitrary limit on what system libraries we can use,
+	we can't use dirent.h, so we have to instead use this idiotic and hacky
+	method of getting a list of files instead. If we had access to more of 
+	the C standard library, this code would be much cleaner and efficient.
+	
+	Technically, you can just provide your own headers for system libraries
+	and it doesn't break the rules of the assignment, but that's probably
+	against the spirit of the rules, and so I'm going to avoid it here and
+	just use a garbage hack instead. 
+	
+	Anyway, the actual method here is to outsource the call to the ls program,
+	and then read the file names back in from the output file. */
+	
+	/* Pointers to the linked list nodes. */
 	imgData_t *listHead = NULL;
 	imgData_t *prevNode = NULL;
 	imgData_t *curNode = NULL;
-	DIR *directory_p;
-	struct dirent *entry_p;
-	/* Open the directory. */
-	directory_p = opendir(dirName);
-	if (!directory_p) {
-		fprintf(stderr, "Error opening directory: %s \n", dirName);
+	const char commandFormat[] = "ls %s | grep .bmp | tee listing.txt | grep forcenomatch";
+	
+	/* Construct the command line string. */
+	char *command = malloc(
+		(strlen(commandFormat) + 
+		strlen(dirName))*sizeof(char)
+	);
+	if (!command) {
+		fprintf(stderr, "Error allocating memory for ls command.\n");
 		return NULL;
 	}
+	/* Use sprintf to construct the command. */
+	sprintf(command, commandFormat, dirName);
+#ifdef DEBUG_OUTPUT
+	printf("Running command \"%s\" to get file list.\n", command);
+#endif
+	system(command);
+	/* Open the file list for reading. */
+	FILE *fileList = fopen("listing.txt", "r");
+	if (!fileList) {
+		fprintf(stderr, "Error reading file listing\n");
+		free(command);
+		return NULL;
+	}
+	/* Buffer to hold the current line. 4096 should suffice for a max line 
+	length. */
+	char lineBuffer[4096];
 	/* Read entries from the directory. */
-	while ((entry_p = readdir(directory_p))) {
-		/* First, ignore if it isn't the right type or not an image 
-		file (bmp or gif extension). The magic 8 in there is for
-		checking if it's a file or directory name. */
-		if (entry_p->d_name[0] == '.' ||
-			entry_p->d_type != 8 ||
-			(!testext(entry_p->d_name, ".bmp") &&
-			 !testext(entry_p->d_name, ".gif"))
+	while (fscanf(fileList, "%[^\n]", lineBuffer) > 0) {
+		getc(fileList); /* Advance the file past the newline. */
+		/* First, ignore if it isn't an image file (bmp or gif extension). */
+		if (lineBuffer[0] == '.' ||
+			(!testext(lineBuffer, ".bmp") &&
+			 !testext(lineBuffer, ".gif"))
 		) {
 			continue; 
 		}
 		/* We should at least try to process this file. Allocate a node
 		for it. */
 #ifdef DEBUG_OUTPUT
-		/*DEBUG*/printf("Tracking %s...", entry_p->d_name);
+		/*DEBUG*/printf("Tracking %s...", lineBuffer);
 #endif
 		if (listHead == NULL) {
 			listHead = malloc(sizeof(imgData_t));
@@ -81,7 +109,7 @@ imgData_t *getImageList(char *dirName) {
 			fprintf(stderr, "Error allocating memory for list node\n");
 			return NULL;
 		}
-		curNode->fileName = strdup(entry_p->d_name);
+		curNode->fileName = strdup(lineBuffer);
 		if (!curNode->fileName) {
 			fprintf(stderr, "Error copying file name\n");
 			return NULL;
@@ -99,13 +127,15 @@ imgData_t *getImageList(char *dirName) {
 		printf("Done.\n");
 #endif
 	}
+	/* Free up the line buffer file. */
+	fclose(fileList);
 	return listHead;
 }
 
 /**
  * @name getImageList
- * @brief Should take an image name, read the file in, and decode it into some 
- * kind of pixel array.  
+ * @brief Should take an image name, read the file in, and decode it into 
+ * some kind of pixel array.  
  *
  * See header for details.
  */
@@ -120,7 +150,7 @@ void decodeImage(
 	/* Char buffer pointer which we'll fill in. */
 	char *imgData_p;
 	
-	/* Set defaults for the results so we can return if we encounter an error. 
+	/* Set defaults for the results so we can return if we encounter an error.
 	*/
 	*rgbaArray_p = NULL;
 	*width_p = NULL;
