@@ -23,17 +23,22 @@
 /* fprintf, sterr*/
 
 /* Macro for controlling excess print output. */
-/*#define DEBUG_OUTPUT*/
+/* #define DEBUG_OUTPUT */
 
 /**
  * @name ratioCalculator
- * @brief accepts the current image width and height and returns the ratio 
- * between the new and old size, depending on the target size. Also stashes 
+ * @brief accepts the current image width and height and returns the ratio
+ * between the new and old size, depending on the target size. Also stashes
  * the new dimensions in the newWidth and newHeight pointers if they're valid.
  *
  * See Header for details. 
  */
-float ratioCalculator(int width, int height, int targetWidth, int *newWidth_p, int *newHeight_p) {
+float ratioCalculator(
+	int width, 
+	int height, 
+	int targetWidth, 
+	int *newWidth_p, 
+	int *newHeight_p) {
 	/* We simply find the ratio between old and new width and apply that to 
 	scale the old height to the new height. */
 	float ratio = (float)width / (float)targetWidth;
@@ -46,7 +51,11 @@ float ratioCalculator(int width, int height, int targetWidth, int *newWidth_p, i
 	if (newHeight_p) {
 		*newHeight_p = (int)((float)height / ratio);
 #ifdef DEBUG_OUTPUT
-		/*DEBUG*/printf("Old: %dx%d New: %dx%d\n", width, height, *newWidth_p, *newHeight_p);
+		/*DEBUG*/printf("Old: %dx%d New: %dx%d\n", 
+		width, 
+		height, 
+		*newWidth_p, 
+		*newHeight_p);
 #endif
 	}	
 	return ratio;
@@ -58,8 +67,8 @@ float ratioCalculator(int width, int height, int targetWidth, int *newWidth_p, i
  *
  * See Header for details. 
  */
-void imageResizer(const char *rgbaBufferIn, int widthIn, int heightIn, 
-	char **rgbaBufferOut_p, int *widthOut_p, int *heightOut_p, 
+void imageResizer(const char *rgbaBufferIn, int widthIn, int heightIn,
+	char **rgbaBufferOut_p, int *widthOut_p, int *heightOut_p,
 	int targetWidth) {
 	/* Use two loops to iterate through each of the images and access pixels
 	at a ratio faster in one image than the other. */
@@ -70,7 +79,12 @@ void imageResizer(const char *rgbaBufferIn, int widthIn, int heightIn,
 
 	/* Calculate the ratio to move through the source compared to the 
 	original. */
-	float ratio = ratioCalculator(widthIn, heightIn, targetWidth, widthOut_p, heightOut_p);
+	float ratio = ratioCalculator(
+		widthIn, 
+		heightIn, 
+		targetWidth, 
+		widthOut_p, 
+		heightOut_p);
 	int ratioI = (int)ratio;
 
 	/* Allocate space for the new resized buffer. */
