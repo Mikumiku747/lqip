@@ -1,5 +1,5 @@
 /**
- * @file: decode.c
+ * @file: decode.h
  * @subject: 48430 Embedded C - Assignment 3
  * @developers:
  *   @name: Daniel Selmes  @student_id: 12545253
@@ -20,8 +20,8 @@
  */
 
 /* Include Guard. */
-#ifndef ENCODE_H
-#define ENCODE_H
+#ifndef DECODE_H
+#define DECODE_H
 
 /* Linked list nodes to keep data associated with an image in one place. */
 struct imgData {
@@ -32,6 +32,7 @@ struct imgData {
 	int heightBig;
 	int widthSml;
 	int heightSml;
+	char *bmpBuffer;
 	char *base64Buffer;
 	int failedProcessing;
 	struct imgData *next;
@@ -48,7 +49,7 @@ typedef struct imgData imgData_t;
 imgData_t *getImageList(char *dirName);
 
  /**
- * @name getImageList
+ * @name decodeImage
  * @brief Should take an image name, read the file in, and decode it into some 
  * kind of pixel array.  
  *

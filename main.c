@@ -29,6 +29,7 @@
 #include "argparse.h"
 #include "base64.h"
 #include "encrypt.h"
+#include "encode.h"
 
 /* Macro to avoid freeing NULL pointers. Whenever this is used, it is because
 a pointer may or may not actually be allocated to begin with, and freeing an
@@ -171,6 +172,7 @@ int main(int argc, char **argv) {
 		/* Buffers for the big and small copies of the images. */
 		char *rgbaBufferBig;
 		char *rgbaBufferSml;
+		char *bmpBuffer;
 		
 		/* Decode the image, check it really happened. */
 		decodeImage(imgName, &rgbaBufferBig, &widthBig, &heightBig);
@@ -189,14 +191,32 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 		
-		/* Free the original image now that we have the thumbnail. */
+		/* Encode the image into a BMP file. */
+		bmpBuffer = encodeImageBmp(rgbaBufferSml, widthSml, heightSml);
+		if (!bmpBuffer) {
+			fprintf(stderr, "BMP encoder error, exiting.\n");
+			free(imgName);
+			free(rgbaBufferBig);
+			free(rgbaBufferSml);
+			return 1;
+		}
+#ifdef DEBUG_OUTPUT
+		/* Attempt to output the image data to a file to test it worked. */
+		char *newName = malloc(sizeof(char)*strlen("%s-sml.bmp")+
+			sizeof(char)*strlen(imgName));
+		sprintf(newName, "%s-sml.bmp", imgName);
+		FILE *testImgFile = fopen(newName, "w");
+		fwrite(bmpBuffer, sizeof(char), 54 + widthSml*heightSml*4, testImgFile);
+		fclose(testImgFile);
+#endif
+		
 		/* Encode the result into a base64 string. I allocate 1.4 times the	number
 		of bytes in the RGBA array since the inflation ratio when encoding as 
 		base64 is 4 characters per 3 btyes, or 1.33, so 1.4 is on the safe side. 
 		*/
-		int inputBufferSize = widthSml * heightSml * 4;
-		char b64String[inputBufferSize + 1];
-		encode(rgbaBufferSml, inputBufferSize, b64String);
+		int inputBufferSize = widthSml * heightSml * 4 + 54;
+		char b64String[(int)(inputBufferSize * 1.4)];
+		encode(bmpBuffer, inputBufferSize, b64String);
 		
 		/* Display the resulting YAML to the command line: */
 #ifdef VERBOSE_OUTPUT
@@ -284,17 +304,30 @@ int main(int argc, char **argv) {
 			}
 #ifdef DEBUG_OUTPUT
 			/*DEBUG*/printf("Done.\n");
+			
+			/* Do the bmp encoding. */
+			curNode->bmpBuffer = encodeImageBmp(curNode->rgbaBufferSml, 
+				curNode->widthSml, curNode->heightSml);
+#ifdef DEBUG_OUTPUT
+			/* Attempt to output the image data to a file to test it worked. */
+			char *newName = malloc(sizeof(char)*strlen("%s-sml.bmp")+
+				sizeof(char)*strlen(curNode->fileName));
+			sprintf(newName, "%s-sml.bmp", curNode->fileName);
+			FILE *testImgFile = fopen(newName, "w");
+			fwrite(curNode->bmpBuffer, sizeof(char), 54 + curNode->widthSml * curNode->heightSml*4, testImgFile);
+			fclose(testImgFile);
+#endif
 			/* Encoding to base64. */
 			/*DEBUG*/printf("Encoding %s base64...", curNode->fileName);
 #endif
 			/* Allocate the output buffer for the base64 bytes. */
-			curNode->base64Buffer = malloc(sizeof(char) * 4 * curNode->widthSml * curNode->heightSml * 1.4);
+			curNode->base64Buffer = malloc(sizeof(char) * (4 * curNode->widthSml * curNode->heightSml + 54) * 1.4);
 			if (!curNode->base64Buffer) {
 				fprintf(stderr, "Error allocating base64 buffer for %s\n", curNode->fileName);
 				curNode->failedProcessing = 1;
 				continue;
 			}
-			encode(curNode->rgbaBufferSml, curNode->widthSml*curNode->heightSml*sizeof(char)*4, curNode->base64Buffer);
+			encode(curNode->bmpBuffer, curNode->widthSml*curNode->heightSml*sizeof(char)*4 + 54, curNode->base64Buffer);
 #ifdef DEBUG_OUTPUT
 			/*DEBUG*/printf("Done.\n");
 #endif
