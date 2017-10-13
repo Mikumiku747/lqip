@@ -60,7 +60,8 @@ imgData_t *getImageList(char *dirName) {
 	imgData_t *listHead = NULL;
 	imgData_t *prevNode = NULL;
 	imgData_t *curNode = NULL;
-	const char commandFormat[] = "ls %s | grep .bmp | tee listing.txt | grep forcenomatch";
+	const char commandFormat[] = "ls %s | grep .bmp |\
+								 tee listing.txt | grep forcenomatch";
 	
 	/* Construct the command line string. */
 	char *command = malloc(
@@ -304,7 +305,8 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 		printf("Img info:\nWidth: %d Height %d Depth %d\n"
 			"CompressionMethod %d Palette size: %d\n"
 			"Color Size: %.8X Header size: %d, Data pos: %.8X\n", width, height, 
-			bpp, compressionMethod, colorPaletteSize, (unsigned int)bpc, 40, (unsigned int)dataOffset);
+			bpp, compressionMethod, colorPaletteSize, 
+			(unsigned int)bpc, 40, (unsigned int)dataOffset);
 #endif
 
 		/* Now that we have all the critical info, we can read the color 
@@ -363,7 +365,8 @@ void bmpDecode(FILE *imgFile, char **rgbaArray_p, int *width_p,
 			fprintf(stderr, "Error allocating BMP data memory\n");
 			return;
 		}
-		if (fread(data_p, sizeof(char)*rowsize, height, imgFile) != (size_t)height) {
+		if (fread(data_p, sizeof(char) * rowsize, height, imgFile) != 
+			(size_t)height) {
 				fprintf(stderr, "Error reading BMP data\n");
 				free(data_p);
 				free(palette_p);
