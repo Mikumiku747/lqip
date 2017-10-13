@@ -24,7 +24,9 @@
  /**
  * 64 character table for converting to Base64
  */
-char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                   "abcdefghijklmnopqrstuvwxyz"
+                   "0123456789+/";
 
 /**
  * Implementation of decode
@@ -107,14 +109,15 @@ void encode(char *input_str, int inputBufferSize,char *b64_output) {
 void encodeChunk( unsigned char in_chunk[], char b64_out_chunk[], int len ) {
     unsigned char out[5];
     out[0] = b64_table[ in_chunk[0] >> 2 ];
-    out[1] = b64_table[ ((in_chunk[0] & 0x03) << 4) | ((in_chunk[1] & 0xf0) >> 4) ];
-    out[2] = (unsigned char) (len > 1 ? b64_table[ ((in_chunk[1] & 0x0f) << 2) |
-                                                   ((in_chunk[2] & 0xc0) >> 6) ] : '=');
+    out[1] = b64_table[ ((in_chunk[0] & 0x03) << 4) 
+            | ((in_chunk[1] & 0xf0) >> 4) ];
+    out[2] = (unsigned char) (len > 1 ? 
+             b64_table[ ((in_chunk[1] & 0x0f) << 2) |
+             ((in_chunk[2] & 0xc0) >> 6) ] : '=');
     out[3] = (unsigned char) (len > 2 ? b64_table[ in_chunk[2] & 0x3f ] : '=');
     out[4] = '\0';
     strncat(b64_out_chunk, (char *)out, sizeof(out));
 }
-
 
 
 /**
