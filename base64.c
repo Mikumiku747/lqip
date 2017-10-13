@@ -24,9 +24,9 @@
  /**
  * 64 character table for converting to Base64
  */
-char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                    abcdefghijklmnopqrstuvwxyz\
-                    0123456789+/";
+char b64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                   "abcdefghijklmnopqrstuvwxyz"
+                   "0123456789+/";
 
 /**
  * Implementation of decode

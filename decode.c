@@ -60,8 +60,8 @@ imgData_t *getImageList(char *dirName) {
 	imgData_t *listHead = NULL;
 	imgData_t *prevNode = NULL;
 	imgData_t *curNode = NULL;
-	const char commandFormat[] = "ls %s | grep .bmp |\
-								 tee listing.txt | grep forcenomatch";
+	const char commandFormat[] = "ls %s | grep .bmp | "
+								 "tee listing.txt | grep forcenomatch";
 	
 	/* Construct the command line string. */
 	char *command = malloc(
